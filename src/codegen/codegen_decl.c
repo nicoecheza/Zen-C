@@ -1031,50 +1031,50 @@ void print_type_defs(ParserContext *ctx, FILE *out, ASTNode *nodes)
     if (!g_config.is_freestanding)
     {
         fprintf(out, "typedef char* string;\n");
-    
 
         fprintf(out, "typedef struct { void **data; int len; int cap; } Vec;\n");
         fprintf(out, "#define Vec_new() (Vec){.data=0, .len=0, .cap=0}\n");
 
         if (g_config.use_cpp)
         {
-            fprintf(out, "void _z_vec_push(Vec *v, void *item) { if(v->len >= v->cap) { "
-                        "v->cap = v->cap?v->cap*2:8; "
-                        "v->data = static_cast<void**>(realloc(v->data, v->cap * sizeof(void*))); } "
-                        "v->data[v->len++] = item; }\n");
+            fprintf(out,
+                    "void _z_vec_push(Vec *v, void *item) { if(v->len >= v->cap) { "
+                    "v->cap = v->cap?v->cap*2:8; "
+                    "v->data = static_cast<void**>(realloc(v->data, v->cap * sizeof(void*))); } "
+                    "v->data[v->len++] = item; }\n");
             fprintf(out, "static inline Vec _z_make_vec(int count, ...) { Vec v = {0}; v.cap = "
-                        "count > 8 ? "
-                        "count : 8; v.data = static_cast<void**>(malloc(v.cap * sizeof(void*))); "
-                        "v.len = 0; va_list "
-                        "args; "
-                        "va_start(args, count); for(int i=0; i<count; i++) { v.data[v.len++] = "
-                        "va_arg(args, void*); } va_end(args); return v; }\n");
+                         "count > 8 ? "
+                         "count : 8; v.data = static_cast<void**>(malloc(v.cap * sizeof(void*))); "
+                         "v.len = 0; va_list "
+                         "args; "
+                         "va_start(args, count); for(int i=0; i<count; i++) { v.data[v.len++] = "
+                         "va_arg(args, void*); } va_end(args); return v; }\n");
         }
         else
         {
             fprintf(out, "void _z_vec_push(Vec *v, void *item) { if(v->len >= v->cap) { "
-                        "v->cap = v->cap?v->cap*2:8; "
-                        "v->data = z_realloc(v->data, v->cap * sizeof(void*)); } "
-                        "v->data[v->len++] = item; }\n");
+                         "v->cap = v->cap?v->cap*2:8; "
+                         "v->data = z_realloc(v->data, v->cap * sizeof(void*)); } "
+                         "v->data[v->len++] = item; }\n");
             fprintf(out, "static inline Vec _z_make_vec(int count, ...) { Vec v = {0}; v.cap = "
-                        "count > 8 ? "
-                        "count : 8; v.data = z_malloc(v.cap * sizeof(void*)); v.len = 0; va_list "
-                        "args; "
-                        "va_start(args, count); for(int i=0; i<count; i++) { v.data[v.len++] = "
-                        "va_arg(args, void*); } va_end(args); return v; }\n");
+                         "count > 8 ? "
+                         "count : 8; v.data = z_malloc(v.cap * sizeof(void*)); v.len = 0; va_list "
+                         "args; "
+                         "va_start(args, count); for(int i=0; i<count; i++) { v.data[v.len++] = "
+                         "va_arg(args, void*); } va_end(args); return v; }\n");
         }
         fprintf(out, "#define Vec_push(v, i) _z_vec_push(&(v), (void*)(long)(i))\n");
 
         fprintf(out, "#define _z_check_bounds(index, limit) ({ ZC_AUTO _i = "
-                        "(index); if(_i < 0 "
-                        "|| _i >= (limit)) { fprintf(stderr, \"Index out of bounds: "
-                        "%%ld (limit "
-                        "%%d)\\n\", (long)_i, (int)(limit)); exit(1); } _i; })\n");
+                     "(index); if(_i < 0 "
+                     "|| _i >= (limit)) { fprintf(stderr, \"Index out of bounds: "
+                     "%%ld (limit "
+                     "%%d)\\n\", (long)_i, (int)(limit)); exit(1); } _i; })\n");
     }
     else
     {
         // We might need to change this later. So TODO.
-         fprintf(out, "#define _z_check_bounds(index, limit) ({ ZC_AUTO _i = "
+        fprintf(out, "#define _z_check_bounds(index, limit) ({ ZC_AUTO _i = "
                      "(index); if(_i < 0 "
                      "|| _i >= (limit)) { z_panic(\"index out of bounds\"); } _i; })\n");
     }

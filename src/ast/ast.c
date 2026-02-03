@@ -45,8 +45,14 @@ ASTNode *ast_create(NodeType type)
 
 void ast_free(ASTNode *node)
 {
-    (void)node;
-    return;
+    if (node->type == NODE_COMMENT)
+    {
+        if (node->comment.content)
+        {
+            free(node->comment.content);
+        }
+    }
+    free(node);
 }
 
 Type *type_new(TypeKind kind)

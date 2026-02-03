@@ -519,6 +519,9 @@ void codegen_node_single(ParserContext *ctx, ASTNode *node, FILE *out)
     }
     switch (node->type)
     {
+    case NODE_COMMENT:
+        fprintf(out, "%s\n", node->comment.content);
+        break;
     case NODE_MATCH:
         codegen_match_internal(ctx, node, out, 0); // 0 = statement context
         fprintf(out, ";\n");

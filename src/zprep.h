@@ -129,10 +129,11 @@ typedef struct
  */
 typedef struct
 {
-    const char *src; ///< Source code buffer.
-    int pos;         ///< Current position index.
-    int line;        ///< Current line number.
-    int col;         ///< Current column number.
+    const char *src;   ///< Source code buffer.
+    int pos;           ///< Current position index.
+    int line;          ///< Current line number.
+    int col;           ///< Current column number.
+    int emit_comments; ///< 1 if comments should be emitted as tokens.
 } Lexer;
 
 /**
@@ -361,6 +362,8 @@ typedef struct
     int use_cuda;        ///< 1 if --cuda (emit CUDA-compatible code).
     int use_objc;        ///< 1 if --objc (emit Objective-C compatible code).
     int mode_lsp;        ///< 1 if 'lsp' command (Language Server Protocol).
+
+    int keep_comments; ///< 1 if --keep-comments (preserve comments in output).
 
     // GCC Flags accumulator.
     char gcc_flags[4096]; ///< Flags passed to the backend compiler.

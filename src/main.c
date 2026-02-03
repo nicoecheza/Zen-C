@@ -41,6 +41,7 @@ void print_usage()
     printf("  --version       Print version information\n");
     printf("  -o <file>       Output executable name\n");
     printf("  --emit-c        Keep generated C file (out.c)\n");
+    printf("  --keep-comments Preserve comments in output C file\n");
     printf("  --freestanding  Freestanding mode (no stdlib)\n");
     printf("  --cc <compiler> C compiler to use (gcc, clang, tcc, zig)\n");
     printf("  -O<level>       Optimization level\n");
@@ -139,6 +140,10 @@ int main(int argc, char **argv)
         if (strcmp(arg, "--emit-c") == 0)
         {
             g_config.emit_c = 1;
+        }
+        else if (strcmp(arg, "--keep-comments") == 0)
+        {
+            g_config.keep_comments = 1;
         }
         else if (strcmp(arg, "--version") == 0 || strcmp(arg, "-V") == 0)
         {

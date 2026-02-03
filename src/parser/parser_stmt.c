@@ -2100,7 +2100,26 @@ ASTNode *parse_macro_call(ParserContext *ctx, Lexer *l, char *macro_name)
 
 ASTNode *parse_statement(ParserContext *ctx, Lexer *l)
 {
+    int prev_emit = l->emit_comments;
+    if (g_config.keep_comments)
+    {
+        l->emit_comments = 1;
+    }
     Token tk = lexer_peek(l);
+    l->emit_comments = prev_emit;
+
+    if (tk.type == TOK_COMMENT)
+    {
+        l->emit_comments = 1;
+        lexer_next(l); // consume comment
+        l->emit_comments = prev_emit;
+
+        ASTNode *node = ast_create(NODE_COMMENT);
+        node->comment.content = xmalloc(tk.len + 1);
+        strncpy(node->comment.content, tk.start, tk.len);
+        node->comment.content[tk.len] = 0;
+        return node;
+    }
 
     ASTNode *s = NULL;
 

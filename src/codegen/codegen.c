@@ -1140,6 +1140,9 @@ void codegen_expression(ParserContext *ctx, ASTNode *node, FILE *out)
         codegen_expression(ctx, node->va_copy.src, out);
         fprintf(out, ")");
         break;
+    case NODE_COMMENT:
+        fprintf(out, "%s\n", node->comment.content);
+        break;
     case NODE_VA_ARG:
     {
         char *type_str = codegen_type_to_string(node->va_arg.type_info);

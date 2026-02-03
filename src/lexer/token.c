@@ -7,6 +7,7 @@ void lexer_init(Lexer *l, const char *src)
     l->pos = 0;
     l->line = 1;
     l->col = 1;
+    l->emit_comments = 0;
 }
 
 static int is_ident_start(char c)
@@ -77,6 +78,14 @@ Token lexer_next(Lexer *l)
         {
             len++;
         }
+
+        if (l->emit_comments)
+        {
+            l->pos += len;
+            l->col += len;
+            return (Token){TOK_COMMENT, s, len, start_line, start_col};
+        }
+
         l->pos += len;
         l->col += len;
         return lexer_next(l);
@@ -85,6 +94,7 @@ Token lexer_next(Lexer *l)
     // Block Comments.
     if (s[0] == '/' && s[1] == '*')
     {
+        const char *comment_start = s;
         // skip two start chars
         l->pos += 2;
         s += 2;
@@ -112,6 +122,12 @@ Token lexer_next(Lexer *l)
 
             l->pos++;
             s++;
+        }
+
+        if (l->emit_comments)
+        {
+            size_t len = s - comment_start;
+            return (Token){TOK_COMMENT, comment_start, len, start_line, start_col};
         }
 
         return lexer_next(l);

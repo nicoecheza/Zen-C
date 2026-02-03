@@ -13,6 +13,33 @@ ASTNode *parse_program_nodes(ParserContext *ctx, Lexer *l)
     ASTNode *h = 0, *tl = 0;
     while (1)
     {
+        if (g_config.keep_comments)
+        {
+            l->emit_comments = 1;
+            Token tk = lexer_peek(l);
+            if (tk.type == TOK_COMMENT)
+            {
+                lexer_next(l);        // consume
+                l->emit_comments = 0; // reset
+                ASTNode *node = ast_create(NODE_COMMENT);
+                node->comment.content = xmalloc(tk.len + 1);
+                strncpy(node->comment.content, tk.start, tk.len);
+                node->comment.content[tk.len] = 0;
+
+                if (!h)
+                {
+                    h = node;
+                }
+                else
+                {
+                    tl->next = node;
+                }
+                tl = node;
+                continue;
+            }
+            l->emit_comments = 0;
+        }
+
         skip_comments(l);
         Token t = lexer_peek(l);
         if (t.type == TOK_EOF)

@@ -457,6 +457,9 @@ if x > 10 {
 
 // Ternario
 let y = x > 10 ? 1 : 0;
+
+// If-Expression (para condiciones complejas)
+let categoria = if (x > 100) { "enorme" } else if (x > 10) { "grande" } else { "pequeño" };
 ```
 
 #### Coincidencia de Patrones (Pattern Matching)
@@ -615,6 +618,13 @@ let x = 42;
 let nombre = "Zen";
 println "Valor: {x}, Nombre: {nombre}";
 "Valor: {x}, Nombre: {nombre}"; // abreviatura println
+```
+
+**Escapando Llaves**: Usa `{{` para producir una llave literal `{` y `}}` para una `}` literal:
+
+```zc
+let json = "JSON: {{\"clave\": \"valor\"}}";
+// Salida: JSON: {"clave": "valor"}
 ```
 
 #### Prompts de Entrada (`?`)

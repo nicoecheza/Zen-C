@@ -459,6 +459,9 @@ if x > 10 {
 
 // Operatore ternario
 let y = x > 10 ? 1 : 0; // Se x è maggiore di 10 y sarà uguale a 1, in ogni altro caso, y sarà uguale a 0
+
+// If-Expression (per condizioni complesse)
+let categoria = if (x > 100) { "enorme" } else if (x > 10) { "grande" } else { "piccolo" };
 ```
 
 #### Pattern Matching
@@ -610,6 +613,13 @@ let x = 42;
 let nome = "Max";
 println "Valore: {x}, Nome: {name}";
 "Valore: {x}, Nome: {name}"; // scorciatoia per println
+```
+
+**Escape delle Parentesi Graffe**: Usa `{{` per produrre una parentesi graffa letterale `{` e `}}` per una `}` letterale:
+
+```zc
+let json = "JSON: {{\"chiave\": \"valore\"}}";
+// Output: JSON: {"chiave": "valore"}
 ```
 
 #### Prompt di Input (`?`)

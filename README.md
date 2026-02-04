@@ -458,6 +458,9 @@ if x > 10 {
 
 // Ternary
 let y = x > 10 ? 1 : 0;
+
+// If-Expression (for complex conditions)
+let category = if (x > 100) { "huge" } else if (x > 10) { "large" } else { "small" };
 ```
 
 #### Pattern Matching
@@ -615,6 +618,13 @@ let x = 42;
 let name = "Zen";
 println "Value: {x}, Name: {name}";
 "Value: {x}, Name: {name}"; // shorthand println
+```
+
+**Escaping Braces**: Use `{{` to produce a literal `{` and `}}` for a literal `}`:
+
+```zc
+let json = "JSON: {{\"key\": \"value\"}}";
+// Output: JSON: {"key": "value"}
 ```
 
 #### Input Prompts (`?`)

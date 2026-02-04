@@ -963,7 +963,47 @@ static ASTNode *create_fstring_block(ParserContext *ctx, const char *content)
     const char *cur = content;
     while (*cur)
     {
+        // Handle escape }} first - output literal } and skip
+        if (cur[0] == '}' && cur[1] == '}')
+        {
+            ASTNode *cat = ast_create(NODE_RAW_STMT);
+            cat->raw_stmt.content = xstrdup("strcat(_b, \"}\");");
+            tail->next = cat;
+            tail = cat;
+            cur += 2;
+            continue;
+        }
+
         char *brace = strchr(cur, '{');
+        // Also find }} in the remaining text to handle before it
+        char *dbl_close = strstr(cur, "}}");
+
+        // If }} comes before next { or no {, handle text up to }}
+        if (dbl_close && (!brace || dbl_close < brace))
+        {
+            // Output text before }}
+            if (dbl_close > cur)
+            {
+                int len = dbl_close - cur;
+                char *txt = xmalloc(len + 1);
+                strncpy(txt, cur, len);
+                txt[len] = 0;
+                ASTNode *cat = ast_create(NODE_RAW_STMT);
+                cat->raw_stmt.content = xmalloc(len + 20);
+                sprintf(cat->raw_stmt.content, "strcat(_b, \"%s\");", txt);
+                tail->next = cat;
+                tail = cat;
+                free(txt);
+            }
+            // Output escaped }
+            ASTNode *cat = ast_create(NODE_RAW_STMT);
+            cat->raw_stmt.content = xstrdup("strcat(_b, \"}\");");
+            tail->next = cat;
+            tail = cat;
+            cur = dbl_close + 2;
+            continue;
+        }
+
         if (!brace)
         {
             if (strlen(cur) > 0)
@@ -1393,6 +1433,51 @@ ASTNode *parse_primary(ParserContext *ctx, Lexer *l)
     else if (t.type == TOK_AT)
     {
         node = parse_intrinsic(ctx, l);
+    }
+
+    else if (t.type == TOK_IDENT && strncmp(t.start, "if", 2) == 0 && t.len == 2)
+    {
+        // If-expression: parse inline (already consumed 'if')
+        ASTNode *cond = parse_expression(ctx, l);
+
+        ASTNode *then_b = NULL;
+        if (lexer_peek(l).type == TOK_LBRACE)
+        {
+            then_b = parse_block(ctx, l);
+        }
+        else
+        {
+            enter_scope(ctx);
+            ASTNode *s = parse_statement(ctx, l);
+            exit_scope(ctx);
+            then_b = ast_create(NODE_BLOCK);
+            then_b->block.statements = s;
+        }
+
+        ASTNode *else_b = NULL;
+        skip_comments(l);
+        if (lexer_peek(l).type == TOK_IDENT && strncmp(lexer_peek(l).start, "else", 4) == 0 &&
+            lexer_peek(l).len == 4)
+        {
+            lexer_next(l); // eat 'else'
+            if (lexer_peek(l).type == TOK_LBRACE)
+            {
+                else_b = parse_block(ctx, l);
+            }
+            else
+            {
+                enter_scope(ctx);
+                ASTNode *s = parse_statement(ctx, l);
+                exit_scope(ctx);
+                else_b = ast_create(NODE_BLOCK);
+                else_b->block.statements = s;
+            }
+        }
+
+        node = ast_create(NODE_IF);
+        node->if_stmt.condition = cond;
+        node->if_stmt.then_body = then_b;
+        node->if_stmt.else_body = else_b;
     }
 
     else if (t.type == TOK_IDENT && strncmp(t.start, "match", 5) == 0 && t.len == 5)

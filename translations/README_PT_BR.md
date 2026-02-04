@@ -458,6 +458,9 @@ if x > 10 {
 
 // Condicional Ternária
 let y = x > 10 ? 1 : 0;
+
+// If-Expression (para condições complexas)
+let categoria = if (x > 100) { "enorme" } else if (x > 10) { "grande" } else { "pequeno" };
 ```
 
 #### Correspondência de Padrões
@@ -619,6 +622,13 @@ let x = 42;
 let name = "Zen";
 println "Value: {x}, Name: {name}";
 "Value: {x}, Name: {name}"; // abreviação de println
+```
+
+**Escapando Chaves**: Use `{{` para produzir uma chave literal `{` e `}}` para uma `}` literal:
+
+```zc
+let json = "JSON: {{\"chave\": \"valor\"}}";
+// Saída: JSON: {"chave": "valor"}
 ```
 
 #### Prompts de Input (`?`)

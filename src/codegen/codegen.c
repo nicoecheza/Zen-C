@@ -995,6 +995,89 @@ void codegen_expression(ParserContext *ctx, ASTNode *node, FILE *out)
         fprintf(out, " })");
         break;
     }
+    case NODE_IF:
+    {
+        // If-expression: emit as GCC statement expression
+        // Use typeof on first branch's last expression to declare result type
+        fprintf(out, "({ ");
+
+        // Find the result expression from then_body for typeof
+        ASTNode *then_result = NULL;
+        if (node->if_stmt.then_body && node->if_stmt.then_body->type == NODE_BLOCK)
+        {
+            ASTNode *stmt = node->if_stmt.then_body->block.statements;
+            while (stmt && stmt->next)
+            {
+                stmt = stmt->next;
+            }
+            then_result = stmt;
+        }
+        else
+        {
+            then_result = node->if_stmt.then_body;
+        }
+
+        // Declare result variable using typeof
+        if (then_result)
+        {
+            fprintf(out, "__typeof__(");
+            codegen_expression(ctx, then_result, out);
+            fprintf(out, ") _ifval; ");
+        }
+        else
+        {
+            fprintf(out, "int _ifval; "); // fallback
+        }
+
+        fprintf(out, "if (");
+        codegen_expression(ctx, node->if_stmt.condition, out);
+        fprintf(out, ") { ");
+        if (node->if_stmt.then_body && node->if_stmt.then_body->type == NODE_BLOCK)
+        {
+            ASTNode *stmt = node->if_stmt.then_body->block.statements;
+            while (stmt && stmt->next)
+            {
+                codegen_node_single(ctx, stmt, out);
+                stmt = stmt->next;
+            }
+            if (stmt)
+            {
+                fprintf(out, "_ifval = ");
+                codegen_expression(ctx, stmt, out);
+                fprintf(out, "; ");
+            }
+        }
+        else if (node->if_stmt.then_body)
+        {
+            fprintf(out, "_ifval = ");
+            codegen_expression(ctx, node->if_stmt.then_body, out);
+            fprintf(out, "; ");
+        }
+        fprintf(out, "} else { ");
+        if (node->if_stmt.else_body && node->if_stmt.else_body->type == NODE_BLOCK)
+        {
+            ASTNode *stmt = node->if_stmt.else_body->block.statements;
+            while (stmt && stmt->next)
+            {
+                codegen_node_single(ctx, stmt, out);
+                stmt = stmt->next;
+            }
+            if (stmt)
+            {
+                fprintf(out, "_ifval = ");
+                codegen_expression(ctx, stmt, out);
+                fprintf(out, "; ");
+            }
+        }
+        else if (node->if_stmt.else_body)
+        {
+            fprintf(out, "_ifval = ");
+            codegen_expression(ctx, node->if_stmt.else_body, out);
+            fprintf(out, "; ");
+        }
+        fprintf(out, "} _ifval; })");
+        break;
+    }
     case NODE_TRY:
     {
         char *type_name = "Result";

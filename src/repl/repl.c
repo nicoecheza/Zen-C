@@ -881,6 +881,25 @@ static char *repl_readline(const char *prompt, char **history, int history_len, 
     return buf;
 }
 
+// Forward declarations
+static int is_command(const char *buf, const char *cmd);
+static void repl_get_code(char **history, int len, char **out_global, char **out_main);
+
+static int is_command(const char *buf, const char *cmd)
+{
+    if (buf[0] != ':')
+    {
+        return 0;
+    }
+    size_t cmd_len = strlen(cmd);
+    if (strncmp(buf + 1, cmd, cmd_len) != 0)
+    {
+        return 0;
+    }
+    char next = buf[1 + cmd_len];
+    return next == 0 || isspace(next);
+}
+
 static void repl_get_code(char **history, int len, char **out_global, char **out_main)
 {
     size_t total_len = 0;
@@ -1307,6 +1326,69 @@ void run_repl(const char *self_path)
                     if (history_len == 0)
                     {
                         printf("History is empty.\n");
+                        if (is_command(cmd_buf, "edit"))
+                        {
+                            const char *editor = getenv("EDITOR");
+                            if (!editor)
+                            {
+                                editor = "vi";
+                            }
+
+                            char edit_path[MAX_PATH_SIZE];
+                            const char *tmpdir = z_get_temp_dir();
+                            snprintf(edit_path, sizeof(edit_path), "%s/zprep_edit_%d.zc", tmpdir,
+                                     rand());
+                            FILE *f = fopen(edit_path, "w");
+                            if (f)
+                            {
+                                fclose(f);
+
+                                char cmd[4096];
+                                snprintf(cmd, sizeof(cmd), "%s %s", editor, edit_path);
+                                int status = system(cmd);
+
+                                if (0 == status)
+                                {
+                                    FILE *fr = fopen(edit_path, "r");
+                                    if (fr)
+                                    {
+                                        fseek(fr, 0, SEEK_END);
+                                        long length = ftell(fr);
+                                        fseek(fr, 0, SEEK_SET);
+                                        char *buffer = malloc(length + 1);
+                                        if (buffer)
+                                        {
+                                            fread(buffer, 1, length, fr);
+                                            buffer[length] = 0;
+
+                                            while (length > 0 && buffer[length - 1] == '\n')
+                                            {
+                                                buffer[--length] = 0;
+                                            }
+
+                                            if (strlen(buffer) > 0)
+                                            {
+                                                printf("Running: %s\n", buffer);
+                                                if (history_len >= history_cap)
+                                                {
+                                                    history_cap *= 2;
+                                                    history = realloc(history,
+                                                                      history_cap * sizeof(char *));
+                                                }
+                                                history[history_len++] = strdup(buffer);
+                                            }
+                                            else
+                                            {
+                                                free(buffer);
+                                            }
+                                        }
+                                        fclose(fr);
+                                    }
+                                }
+                                remove(edit_path);
+                            }
+                            continue; // Continue after handling empty history edit
+                        }
                         continue;
                     }
 
@@ -1315,7 +1397,6 @@ void run_repl(const char *self_path)
                         printf("Invalid index.\n");
                         continue;
                     }
-
 
                     char edit_path[MAX_PATH_SIZE];
                     const char *tmpdir = z_get_temp_dir();
@@ -1332,7 +1413,7 @@ void run_repl(const char *self_path)
                             editor = "nano";
                         }
 
-                        char cmd[1024];
+                        char cmd[4096];
                         sprintf(cmd, "%s %s", editor, edit_path);
                         int status = system(cmd);
 
@@ -1374,6 +1455,7 @@ void run_repl(const char *self_path)
                                 fclose(fr);
                             }
                         }
+                        remove(edit_path);
                     }
                     continue;
                 }
@@ -1676,7 +1758,7 @@ void run_repl(const char *self_path)
                         {
                             fprintf(f, "%s", probe_code);
                             fclose(f);
-                            char cmd[512];
+                            char cmd[4096];
                             snprintf(cmd, sizeof(cmd), "%s run -q %s", self_path, tmp_path);
                             system(cmd);
                             remove(tmp_path);
@@ -1742,7 +1824,6 @@ void run_repl(const char *self_path)
                     strcat(probe_code, " let _z_type_probe: __REVEAL_TYPE__; _z_type_probe = (");
                     strcat(probe_code, expr);
                     strcat(probe_code, "); }");
-
 
                     char tmp_path[MAX_PATH_SIZE];
                     const char *tmpdir = z_get_temp_dir();
@@ -1856,7 +1937,6 @@ void run_repl(const char *self_path)
                                  "_start) / CLOCKS_PER_SEC; printf(\"1000 iterations: %.4fs "
                                  "(%.6fs/iter)\\n\", _elapsed, _elapsed/1000); }\n");
                     strcat(code, "}");
-
 
                     char tmp_path[MAX_PATH_SIZE];
                     const char *tmpdir = z_get_temp_dir();

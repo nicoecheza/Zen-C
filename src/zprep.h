@@ -283,4 +283,9 @@ const char *z_get_temp_dir(void);
  */
 int z_get_pid(void);
 
+/**
+ * @brief Check if file descriptor refers to a terminal.
+ */
+int z_isatty(int fd);
+
 #endif

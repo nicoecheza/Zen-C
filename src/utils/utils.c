@@ -49,6 +49,8 @@ static void *arena_alloc_raw(size_t size)
 
 #ifdef _WIN32
 #include <windows.h>
+#include <io.h>
+#include <process.h>
 #endif
 
 double z_get_monotonic_time(void)
@@ -547,7 +549,10 @@ const char *z_get_temp_dir(void)
 {
 #ifdef _WIN32
     static char tmp[MAX_PATH_SIZE] = {0};
-    if (tmp[0]) return tmp;
+    if (tmp[0])
+    {
+        return tmp;
+    }
 
     if (GetTempPathA(sizeof(tmp), tmp))
     {
@@ -571,5 +576,14 @@ int z_get_pid(void)
     return _getpid();
 #else
     return getpid();
+#endif
+}
+
+int z_isatty(int fd)
+{
+#ifdef _WIN32
+    return _isatty(fd);
+#else
+    return isatty(fd);
 #endif
 }
